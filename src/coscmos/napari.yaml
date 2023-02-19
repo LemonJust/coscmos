@@ -1,0 +1,21 @@
+name: coscmos
+display_name: cosCMOS
+contributions:
+  commands:
+    - id: coscmos.make_qwidget
+      python_name: coscmos._widget:ExampleQWidget
+      title: Make example QWidget
+    - id: coscmos.make_magic_widget
+      python_name: coscmos._widget:example_magic_widget
+      title: Make example magic widget
+    - id: coscmos.make_func_widget
+      python_name: coscmos._widget:example_function_widget
+      title: Make example function widget
+  widgets:
+    - command: coscmos.make_qwidget
+      display_name: Example QWidget
+    - command: coscmos.make_magic_widget
+      display_name: Example Magic Widget
+    - command: coscmos.make_func_widget
+      autogenerate: true
+      display_name: Example Function Widget
