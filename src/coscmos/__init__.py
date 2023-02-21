@@ -1,10 +1,11 @@
-try:
-    from ._version import version as __version__
-except ImportError:
-    __version__ = "unknown"
-from ._widget import ExampleQWidget, example_magic_widget
+"""correct sCMOS.
 
-__all__ = (
-    "ExampleQWidget",
-    "example_magic_widget",
-)
+Modules exported by this package:
+
+- `estimate`: The classes to estimate the noise model.
+- `denoise`: The classes to denoise the image data.
+
+"""
+__all__ = ["sCMOSNoise"]
+
+from .core import sCMOSNoise
