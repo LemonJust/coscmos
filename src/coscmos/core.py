@@ -498,8 +498,9 @@ class sCMOSNoise:
         frames: npt.NDArray[int],
         add_value: int = 0,
         scale: float = 1,
-        clip=True,
-        value_range: Tuple[Union[int, float], Union[int, float]] = None,
+        zero_min: bool = True,
+        clip_max: bool = False,
+        max_value: Union[int, float] = None,
     ) -> npt.NDArray[int]:
         """Denoises an image using the estimated noise model.
 
@@ -509,13 +510,13 @@ class sCMOSNoise:
                 Default: 0
             scale : The value to scale the frames after denoising and
                 adding the add_value. Default: 1
-            clip : If True, values outside the value_range will be clipped
-            after denoising.
-            value_range : The value range of the denoised_frames.
-                Any values outside this range will be clipped. If None,
-                the value range is set to
-                (np.min(frames), np.percentile(denoised_frames, 99).
-                Default: None
+            zero_min : If True, shifts the minimum value of the denoised
+                frames to 0. Default: True
+            clip_max : If True, clips the maximum value of the denoised
+                frames to the clip_max. Default: True
+            max_value : The maximum value of the denoised frames. If None,
+                the maximum value is set to the 99th percentile of the
+                denoised frames. Default: None
 
         Returns:
             denoised_frames : The denoised image.
@@ -526,24 +527,10 @@ class sCMOSNoise:
         denoised_frames = (frames - self.offset) / self.gain
         denoised_frames = (denoised_frames + add_value) * scale
         # clip the values if necessary
-        if clip:
-            if value_range is None:
-                value_range = (
-                    0,
-                    np.percentile(denoised_frames, 99.9),
-                )
-            if value_range[0] > value_range[1]:
-                raise ValueError(
-                    "The value range must be a tuple of (min, max)."
-                )
-            if np.any(denoised_frames < value_range[0]):
-                denoised_frames[
-                    denoised_frames <= value_range[0]
-                ] = value_range[0]
-            if np.any(denoised_frames > value_range[1]):
-                denoised_frames[
-                    denoised_frames > value_range[1]
-                ] = value_range[1]
+        if clip_max:
+            if max_value is None:
+                max_value = np.percentile(denoised_frames, 99)
+            denoised_frames[denoised_frames > max_value] = max_value
 
         return denoised_frames
 
@@ -553,10 +540,11 @@ class sCMOSNoise:
         save_path: Union[str, Path],
         batch_size: int = None,
         file_type: str = "TIFF",
-        scale: float = 1,
         add_value: int = 0,
-        clip: bool = True,
-        value_range: Tuple[Union[int, float], Union[int, float]] = None,
+        scale: float = 1,
+        zero_min: bool = True,
+        clip_max: bool = False,
+        max_value: Union[int, float] = None,
         verbose: bool = True,
     ) -> None:
         """Denoises the files in a folder using the estimated noise model.
@@ -570,11 +558,13 @@ class sCMOSNoise:
                 Default: 'TIFF'
             add_value : If True, adds the offset to the denoised frames.
             scale : The scale of the images. Default: 1
-            clip: If True, clips the maximum value of the denoised frames
-            value_range : The value range of the denoised_frames.
-                Any values outside this range will be clipped. If None,
-                the value range is set to
-                (np.min(frames), np.percentile(frames, 99). Default: None
+            zero_min : If True, shifts the minimum value of the denoised
+                frames to 0. Default: True
+            clip_max : If True, clips the maximum value of the denoised
+                frames to the clip_max. Default: True
+            max_value : The maximum value of the denoised frames. If None,
+                the maximum value is set to the 99th percentile of the
+                denoised frames. Default: None
             verbose : If True, prints the progress of the function.
                 Default: True
         """
@@ -602,7 +592,7 @@ class sCMOSNoise:
             frame_ids = list(np.arange(from_frame, to_frame))
             frames = exp.load_volumes(frame_ids)
             denoised_frames = self.denoise_frames(
-                frames, add_value, scale, clip, value_range
+                frames, add_value, scale, zero_min, clip_max, max_value
             )
             tif.imwrite(
                 Path(

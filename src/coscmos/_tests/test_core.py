@@ -247,19 +247,19 @@ class TestSCMOSNoise:
     def test_denoise_frames(self):
         scmos_noise = sCMOSNoise(OFFSET, VARIANCE, TRUE_GAIN)
         denoised_images = scmos_noise.denoise_frames(
-            NOISY_IMAGES, clip=False
+            NOISY_IMAGES, zero_min=False, clip_max=False
         )  # test with numpy array
         assert np.allclose(np.round(denoised_images), IMAGES)
 
         image_w_outlier = np.copy(NOISY_IMAGES)
         image_w_outlier[0, 0, 0] = 10000
         denoised_images = scmos_noise.denoise_frames(
-            image_w_outlier, clip=True
+            image_w_outlier, clip_max=True
         )
         assert np.allclose(np.round(denoised_images), IMAGES)
 
         denoised_images = scmos_noise.denoise_frames(
-            NOISY_IMAGES, clip=True, value_range=(0, 0.5)
+            NOISY_IMAGES, zero_min=True, clip_max=True, max_value=0.5
         )
         assert np.allclose(denoised_images, IMAGES * 0.5)
 
@@ -271,7 +271,7 @@ class TestSCMOSNoise:
 
         # try no batch size
         scmos_noise.denoise_files(
-            image_folder, save_path, clip=False
+            image_folder, save_path, zero_min=False, clip_max=False
         )  # test with files
         denoised_images = tif.imread(str(Path(save_path, "denoised_0.tif")))
         assert denoised_images.shape == (10, 5, 3)
@@ -280,7 +280,11 @@ class TestSCMOSNoise:
         # try batch size of 1 to make sure the files are named correctly
         # ( with 0 padding)
         scmos_noise.denoise_files(
-            image_folder, save_path, batch_size=1, clip=False
+            image_folder,
+            save_path,
+            batch_size=1,
+            zero_min=False,
+            clip_max=False,
         )  # test with files
         denoised_images = np.concatenate(
             [
