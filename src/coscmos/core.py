@@ -448,6 +448,7 @@ class sCMOSNoise:
 
         Args:
             folder_path : The path to the folder to save files in.
+            verbose : If True, prints the progress of the function.
         """
         tif.imwrite(
             Path(folder_path, "calibration_offset.tif"),
@@ -495,6 +496,8 @@ class sCMOSNoise:
     def denoise_frames(
         self,
         frames: npt.NDArray[int],
+        add_value: int = 0,
+        scale: float = 1,
         clip=True,
         value_range: Tuple[Union[int, float], Union[int, float]] = None,
     ) -> npt.NDArray[int]:
@@ -502,6 +505,10 @@ class sCMOSNoise:
 
         Args:
             frames : The frames to be denoised. Shape: (n_frames, x, y)
+            add_value : The value to add to the frames after denoising.
+                Default: 0
+            scale : The value to scale the frames after denoising and
+                adding the add_value. Default: 1
             clip : If True, values outside the value_range will be clipped
             after denoising.
             value_range : The value range of the denoised_frames.
@@ -517,25 +524,26 @@ class sCMOSNoise:
         # remove the offset and divide by the gain
 
         denoised_frames = (frames - self.offset) / self.gain
+        denoised_frames = (denoised_frames + add_value) * scale
         # clip the values if necessary
         if clip:
             if value_range is None:
                 value_range = (
-                    np.min(denoised_frames),
-                    np.percentile(denoised_frames, 99),
+                    0,
+                    np.percentile(denoised_frames, 99.9),
                 )
             if value_range[0] > value_range[1]:
                 raise ValueError(
                     "The value range must be a tuple of (min, max)."
                 )
-            if np.any(denoised_frames <= value_range[0]):
-                denoised_frames[denoised_frames <= value_range[0]] = (
-                    value_range[0] + 1e-6
-                )
-            if np.any(denoised_frames >= value_range[1]):
-                denoised_frames[denoised_frames > value_range[1]] = (
-                    value_range[1] - 1e-6
-                )
+            if np.any(denoised_frames < value_range[0]):
+                denoised_frames[
+                    denoised_frames <= value_range[0]
+                ] = value_range[0]
+            if np.any(denoised_frames > value_range[1]):
+                denoised_frames[
+                    denoised_frames > value_range[1]
+                ] = value_range[1]
 
         return denoised_frames
 
@@ -546,6 +554,7 @@ class sCMOSNoise:
         batch_size: int = None,
         file_type: str = "TIFF",
         scale: float = 1,
+        add_value: int = 0,
         clip: bool = True,
         value_range: Tuple[Union[int, float], Union[int, float]] = None,
         verbose: bool = True,
@@ -559,9 +568,9 @@ class sCMOSNoise:
                 If None, all frames are loaded at once.
             file_type : The file type of the files to be denoised.
                 Default: 'TIFF'
+            add_value : If True, adds the offset to the denoised frames.
             scale : The scale of the images. Default: 1
-            clip : If True, values outside the value_range will be clipped
-                after denoising.
+            clip: If True, clips the maximum value of the denoised frames
             value_range : The value range of the denoised_frames.
                 Any values outside this range will be clipped. If None,
                 the value range is set to
@@ -592,8 +601,8 @@ class sCMOSNoise:
             )
             frame_ids = list(np.arange(from_frame, to_frame))
             frames = exp.load_volumes(frame_ids)
-            denoised_frames = (
-                self.denoise_frames(frames, clip, value_range) * scale
+            denoised_frames = self.denoise_frames(
+                frames, add_value, scale, clip, value_range
             )
             tif.imwrite(
                 Path(
