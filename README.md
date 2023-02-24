@@ -11,6 +11,10 @@
 The noise is estimated through a one-time calibration. The package contains methods to estimate the fixed-pattern noise component from the calibration data and remove it from the images.
 
 ----------------------------------
+
+Based on the methods described in Huang, F., Hartwich, T., Rivera-Molina, F. et al. Video-rate nanoscopy using sCMOS camera–specific single-molecule localization algorithms. Nat Methods 10, 653–658 (2013). https://doi.org/10.1038/nmeth.2488
+
+----------------------------------
 ## Installation
 
 You can install `coscmos` via [pip]:
