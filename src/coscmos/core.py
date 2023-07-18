@@ -392,6 +392,7 @@ class sCMOSNoise:
         illuminated_data: Union[npt.NDArray[int], List[Union[str, Path]]],
         batch_size: int = None,
         file_type="TIFF",
+        scale: float = 1.0,
         verbose=True,
     ) -> "sCMOSNoise":
         """
@@ -414,6 +415,8 @@ class sCMOSNoise:
                 all frames are loaded at once.
             file_type : The file type of the calibration files.
                 Default: 'TIFF'
+            scale : Multiply the calibration data by this value before
+                processing. Default: 1.0 .
             verbose : If True, prints the progress of the function.
                 Default: True
 
