@@ -11,6 +11,15 @@
 The noise is estimated through a one-time calibration. The package contains methods to estimate the fixed-pattern noise component from the calibration data and remove it from the images.
 
 ----------------------------------
+
+Based on the methods described in Huang, F., Hartwich, T., Rivera-Molina, F. et al. Video-rate nanoscopy using sCMOS camera–specific single-molecule localization algorithms. Nat Methods 10, 653–658 (2013). https://doi.org/10.1038/nmeth.2488
+
+----------------------------------
+
+P.S. After creating this lil package I found [this one](https://llspy.readthedocs.io/en/latest/camera.html) , which does the same, but more and better :sob:. It's a part of a [LLSpy: Lattice light-sheet post-processing utility](https://llspy.readthedocs.io/en/latest/?badge=latest). Check it out! :sweat_smile:
+
+----------------------------------
+
 ## Installation
 
 You can install `coscmos` via [pip]:
